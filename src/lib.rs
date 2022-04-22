@@ -189,3 +189,38 @@ fn check_serde_enum() {
         assert_eq! { dbg!(j), *dbg!(e) }
     }
 }
+
+// ops impls
+
+use core::ops::{Add, BitAnd, BitOr, BitXor, Div, Mul, Not, Rem, Shl, Shr, Sub};
+
+macro_rules! ops_impl {
+    ($ty:tt :: $fn:tt : $op:tt) => {
+        impl<const LHS: usize, const RHS: usize> $ty<Usize<RHS>> for Usize<LHS>
+        where [(); LHS $op RHS]:
+        {
+            type Output = Usize<{ LHS $op RHS }>;
+
+            fn $fn(self, _: Usize<RHS>) -> Self::Output { Usize::<{ LHS $op RHS }> }
+        }
+    };
+}
+
+ops_impl! { Add :: add : + }
+ops_impl! { BitAnd :: bitand : & }
+ops_impl! { BitOr :: bitor : | }
+ops_impl! { BitXor :: bitxor : ^ }
+ops_impl! { Div :: div : / }
+ops_impl! { Mul :: mul : * }
+ops_impl! { Rem :: rem : % }
+ops_impl! { Shl :: shl : << }
+ops_impl! { Shr :: shr : >> }
+ops_impl! { Sub :: sub : - }
+
+impl<const N: usize> Not for Usize<N>
+where [(); !N]:
+{
+    type Output = Usize<{ !N }>;
+
+    fn not(self) -> Self::Output { Usize::<{ !N }> }
+}
