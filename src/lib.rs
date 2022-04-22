@@ -37,3 +37,15 @@ impl<const N: usize> PartialEq<usize> for Usize<N> {
 impl<const N: usize> PartialEq<Usize<N>> for usize {
     fn eq(&self, _: &Usize<N>) -> bool { Usize::<N>::try_from(*self).is_ok() }
 }
+
+#[test]
+fn check_value() {
+    let pnum = 771usize;
+    let gnum = Usize::<771>;
+
+    assert_eq! { pnum, gnum };
+    assert_eq! { gnum, pnum };
+
+    let _: usize = gnum.into();
+    let _: Usize<771> = pnum.try_into().unwrap();
+}
