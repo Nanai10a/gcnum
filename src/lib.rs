@@ -224,3 +224,66 @@ where [(); !N]:
 
     fn not(self) -> Self::Output { Usize::<{ !N }> }
 }
+
+macro_rules! ops_test {
+    (ari $name:ident ( $op:tt )) => {
+        #[test]
+        fn $name() {
+            let lgnum = Usize::<330>;
+            let lpnum = 330;
+
+            let rgnum = Usize::<4>;
+            let rpnum = 4;
+
+            assert_eq! { lpnum, Into::<usize>::into(lgnum) }
+            assert_eq! { rpnum, Into::<usize>::into(rpnum) }
+
+            let cgnum = lgnum $op rgnum;
+            let cpnum = lpnum $op rpnum;
+
+            assert_eq! { cpnum, Into::<usize>::into(cgnum) }
+        }
+    };
+    (bin $name:ident ( $op:tt )) => {
+        #[test]
+        fn $name() {
+            let lgnum = Usize::<0b1001>;
+            let lpnum = 0b1001;
+
+            let rgnum = Usize::<3>;
+            let rpnum = 3;
+
+            assert_eq! { lpnum, Into::<usize>::into(lgnum) }
+            assert_eq! { rpnum, Into::<usize>::into(rpnum) }
+
+            let cgnum = lgnum $op rgnum;
+            let cpnum = lpnum $op rpnum;
+
+            assert_eq! { cpnum, Into::<usize>::into(cgnum) }
+        }
+    };
+}
+
+ops_test! { ari check_add(+) }
+ops_test! { bin check_bitand(&) }
+ops_test! { bin check_bitor(|) }
+ops_test! { bin check_bitxor(^) }
+ops_test! { ari check_div(/) }
+ops_test! { ari check_mul(*) }
+ops_test! { ari check_rem(%) }
+ops_test! { ari check_shl(<<) }
+ops_test! { ari check_shr(>>) }
+ops_test! { ari check_sub(-) }
+
+#[test]
+fn check_not() {
+    let gnum = Usize::<330>;
+    let pnum = 330;
+
+    assert_eq! { pnum, Into::<usize>::into(gnum)  }
+
+    let cgnum = dbg!(!gnum);
+    let cpnum = dbg!(!pnum);
+
+    assert_eq! { cpnum, Into::<usize>::into(cgnum) }
+}
