@@ -113,3 +113,77 @@ impl<'de, const N: usize> Deserialize<'de> for Usize<N> {
         deserliazer.deserialize_u8(UsizeVisitor)
     }
 }
+
+#[test]
+fn check_serde_struct() {
+    use serde::{Deserialize, Serialize};
+    #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+    struct Struct {
+        thirty_three: Usize<33>,
+        four: Usize<4>,
+    }
+
+    let json = r#"{"thirty_three":33,"four":4}"#;
+    let data = Struct {
+        thirty_three: Usize::<33>,
+        four: Usize::<4>,
+    };
+
+    let cjson = serde_json::from_str(json).unwrap();
+    let cdata = serde_json::to_string(&data).unwrap();
+
+    assert_eq! { dbg!(json), dbg!(cdata) }
+    assert_eq! { dbg!(data), dbg!(cjson) }
+}
+
+#[test]
+fn check_serde_enum() {
+    use serde::{Deserialize, Serialize};
+    #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[serde(untagged)]
+    // warning: if reverses to define sequence of `Additional` & `Minimal` , serde
+    // always deserialize `Addtional` scheme to `Minimal` one.
+    enum Enum {
+        Turple(Usize<1>, Usize<2>, Usize<3>),
+        Additional { must: Usize<0>, optional: Usize<1> },
+        Minimal { must: Usize<0> },
+        None,
+    }
+
+    let tjson = "[1,2,3]";
+    let mjson = r#"{"must":0}"#;
+    let ajson = r#"{"must":0,"optional":1}"#;
+    let njson = "null";
+
+    let tdata = Enum::Turple(Usize::<1>, Usize::<2>, Usize::<3>);
+    let mdata = Enum::Minimal { must: Usize::<0> };
+    let adata = Enum::Additional {
+        must: Usize::<0>,
+        optional: Usize::<1>,
+    };
+    let ndata = Enum::None;
+
+    let pairs = [
+        (tjson, tdata),
+        (mjson, mdata),
+        (ajson, adata),
+        (njson, ndata),
+    ];
+
+    let jsons = pairs
+        .as_ref()
+        .into_iter()
+        .map(|(j, e)| (j, serde_json::to_string(&e).unwrap()));
+    let datas = pairs
+        .as_ref()
+        .into_iter()
+        .map(|(j, e)| (serde_json::from_str::<Enum>(j).unwrap(), e));
+
+    for (j, e) in jsons {
+        assert_eq! { dbg!(j), dbg!(&e) }
+    }
+
+    for (j, e) in datas {
+        assert_eq! { dbg!(j), *dbg!(e) }
+    }
+}
